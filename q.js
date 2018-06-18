@@ -1719,6 +1719,75 @@ Promise.prototype.allSettled = function () {
         }));
     });
 };
+/**
+ * Breaks an array of promises resolving one chunk (any size) of promises at the time.  If any of
+ * the promises gets rejected, the whole array is rejected immediately.
+ * @param {Array*} an array (or promise for an array) of values (or
+ * promises for values)
+ * @param {Number*} number of max promises per one Promise.all()
+ * @param {Number*} number of miliseconds between resolving promise chunk Promise.all()
+ * @returns a promise for an array of the corresponding values
+ */ 
+function devidedAll(all_promises, max_promises_per_call, miliseconds_between_calls) {
+    var deferred = defer();
+    if(max_promises_per_call < 1) {
+        deferred.reject(new Error('Number of promises per call must be greater then zero.'));
+    }
+    if(!miliseconds_between_calls) {
+        miliseconds_between_calls = 0;
+    }
+    function devidePromises (promises) {
+        var deferred = defer();
+        if (promises.length > max_promises_per_call) {
+            devidePromises(promises.slice(0, max_promises_per_call))
+            .then(function(reponse_1) {
+                setTimeout(function() {
+                    devidePromises(promises.slice(max_promises_per_call, promises.length))
+                    .then(function(response_2) {
+                            deferred.resolve(response_1.concat(response_2))
+                    })
+                    .catch(function(error) {
+                        deferred.reject(error);
+                    })
+                }, miliseconds_between_calls)
+            })
+            .catch(function(error) {
+                    deferred.reject(error_1);
+            })
+        } else {
+            Promise.all(promises)
+            .then(function(response) {
+                deferred.resolve(response);
+            })
+            .catch(function(error) {
+                deferred.reject(error);
+            })
+        }
+        return deferred.promise;
+    }
+    if (all_promises.length > max_promises_per_call) {
+        devidePromises(all_promises)
+        .then(function(response) {
+            deferred.resolve(response);
+        })
+        .catch(function(error) {
+            deferred.reject(error);
+        })
+    } else {
+        Promise.all(all_promises)
+        .then(function(response) {
+            deferred.resolve(response);
+        })
+        .catch(function(error) {
+            deferred.reject(error);
+        })
+    }
+    return deferred.promise;
+}
+    
+Q.devidedAll = devidedAll;
+    
+Promise.prototype.devidedAll = devidedAll;
 
 /**
  * Captures the failure of a promise, giving an oportunity to recover
