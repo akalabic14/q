@@ -1740,7 +1740,7 @@ function devidedAll(all_promises, max_promises_per_call, miliseconds_between_cal
         var deferred = defer();
         if (promises.length > max_promises_per_call) {
             devidePromises(promises.slice(0, max_promises_per_call))
-            .then(function(reponse_1) {
+            .then(function(response_1) {
                 setTimeout(function() {
                     devidePromises(promises.slice(max_promises_per_call, promises.length))
                     .then(function(response_2) {
